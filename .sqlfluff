@@ -1,0 +1,4 @@
+[sqlfluff]
+dialect = mysql          # MySQL方言で解析・Lint
+max_line_length = 120    # 1行の長さ目安（お好みで）
+
