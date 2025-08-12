@@ -1,12 +1,11 @@
-SELECT 
+SELECT
+    student,
     CASE
-        WHEN id % 2 = 1 AND id != (SELECT MAX(id) FROM Seat)
+        WHEN id % 2 = 1 AND id != (SELECT MAX(id) FROM seat)
             THEN id + 1
         WHEN id % 2 = 0
             THEN id - 1
         ELSE id
-    END AS id,
-    student
-FROM Seat
+    END AS id
+FROM seat
 ORDER BY id;
-
