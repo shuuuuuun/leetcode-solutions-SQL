@@ -1,44 +1,23 @@
 name: SQL Lint
 
 on:
-  workflow_dispatch:  # 手動実行できるように（任意）
-
   pull_request:
-    paths:
-      - 'easy/*.sql'
-      - 'easy/**/*.sql'
-      - 'medium/*.sql'
-      - 'medium/**/*.sql'
-      - 'hard/*.sql'
-      - 'hard/**/*.sql'
-
   push:
-    branches:
-      - main
-      - 'problems/**'
-      - 'chore/**'
-    paths:
-      - 'easy/*.sql'
-      - 'easy/**/*.sql'
-      - 'medium/*.sql'
-      - 'medium/**/*.sql'
-      - 'hard/*.sql'
-      - 'hard/**/*.sql'
+    branches: [ main ]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: ci/requirements-ci.txt
 
-      - run: pip install "sqlfluff==2.*"
+      - run: pip install -r ci/requirements-ci.txt
       - run: sqlfluff --version
-
-      # ← Lint対象も easy/ medium/ hard のみ
       - run: sqlfluff lint easy medium hard
-
