@@ -1,23 +1,47 @@
 name: SQL Lint
 
 on:
-  pull_request:
   push:
     branches: [ main ]
+  pull_request:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: ci/requirements-ci.txt
+          python-version: '3.x'
 
-      - run: pip install -r ci/requirements-ci.txt
-      - run: sqlfluff --version
-      - run: sqlfluff lint easy medium hard
+      - name: Install SQLFluff
+        run: |
+          python -m pip install --upgrade pip
+          pip install sqlfluff
+
+      # ここが肝：存在する .sql を収集して0件ならスキップフラグを出力
+      - name: Find tracked .sql files
+        id: find_sql
+        shell: bash
+        run: |
+          set -euo pipefail
+          files="$(git ls-files '*.sql' || true)"
+          if [ -z "$files" ]; then
+            echo "found=0" >> "$GITHUB_OUTPUT"
+            echo "No SQL files found. Skipping lint."
+          else
+            printf '%s\n' "$files" > sqlfiles.txt
+            echo "found=1" >> "$GITHUB_OUTPUT"
+            echo "Found SQL files:"
+            cat sqlfiles.txt
+          fi
+
+      - name: Lint with SQLFluff (MySQL)
+        if: steps.find_sql.outputs.found == '1'
+        shell: bash
+        run: |
+          # *.sql が1件以上あるときだけ lint
+          sqlfluff lint --dialect mysql $(cat sqlfiles.txt)
